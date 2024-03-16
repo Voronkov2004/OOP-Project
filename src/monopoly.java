@@ -1,92 +1,8 @@
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 
 public class monopoly {
-
-    public static ArrayList<ArrayList<String>> createMap(){
-        ArrayList<ArrayList<String>> monopolyMap = new ArrayList<ArrayList<String>>();
-        ArrayList<String> start = new ArrayList<>();
-        start.add("Start");
-        start.add("Start");
-        monopolyMap.add(start);
-
-        ArrayList<String> street1 = new ArrayList<>();
-        street1.add("Oriental Avenue");
-        street1.add("No one");
-        monopolyMap.add(street1);
-
-        ArrayList<String> street2 = new ArrayList<>();
-        street2.add("Vermont Avenue");
-        street2.add("No one");
-        monopolyMap.add(street2);
-
-        ArrayList<String> street3 = new ArrayList<>();
-        street3.add("Connecticut Avenue");
-        street3.add("No one");
-        monopolyMap.add(street3);
-
-        ArrayList<String> street4 = new ArrayList<>();
-        street4.add("Free Stay");
-        street4.add("Free Stay");
-        monopolyMap.add(street4);
-
-        ArrayList<String> street5 = new ArrayList<>();
-        street5.add("ST. James Avenue");
-        street5.add("No one");
-        monopolyMap.add(street5);
-
-        ArrayList<String> street6 = new ArrayList<>();
-        street6.add("Tennessee Avenue");
-        street6.add("No one");
-        monopolyMap.add(street6);
-
-        ArrayList<String> street7 = new ArrayList<>();
-        street7.add("New York Avenue");
-        street7.add("No one");
-        monopolyMap.add(street7);
-
-        ArrayList<String> street8 = new ArrayList<>();
-        street8.add("Penalty");
-        street8.add("Penalty");
-        monopolyMap.add(street8);
-
-        ArrayList<String> street9 = new ArrayList<>();
-        street9.add("Atlantic Avenue");
-        street9.add("No one");
-        monopolyMap.add(street9);
-
-        ArrayList<String> street10 = new ArrayList<>();
-        street10.add("Ventnor Avenue");
-        street10.add("No one");
-        monopolyMap.add(street10);
-
-        ArrayList<String> street11 = new ArrayList<>();
-        street11.add("Marvin Avenue");
-        street11.add("No one");
-        monopolyMap.add(street11);
-
-        ArrayList<String> street12 = new ArrayList<>();
-        street12.add("Reward");
-        street12.add("Reward");
-        monopolyMap.add(street12);
-
-        ArrayList<String> street13 = new ArrayList<>();
-        street13.add("Pacific Avenue");
-        street13.add("No one");
-        monopolyMap.add(street13);
-
-        ArrayList<String> street14 = new ArrayList<>();
-        street14.add("North Carolina Avenue");
-        street14.add("No one");
-        monopolyMap.add(street14);
-
-        ArrayList<String> street15 = new ArrayList<>();
-        street15.add("Pennsylvania Avenue");
-        street15.add("No one");
-        monopolyMap.add(street15);
-
-        return monopolyMap;
-    }
 
     public static int rollTheDice(){
         int output = (int) (Math.random() * 6) + 1;
@@ -94,18 +10,21 @@ public class monopoly {
     }
 
     public static void buyPropertyHuman(ArrayList<ArrayList<String>> map, int counter, Human human){
-        if (isAvailable(map,counter)){
+
+        if (human.budget  >= 400){
             map.get(counter).set(1, human.name);
             System.out.println("You have bought " + map.get(counter).get(0));
             human.properties.add(map.get(counter).get(0));
             human.budget -= 400;
         }
+        else System.out.println("You dont have enough money! Moving forward");
     }
 
-    public static ArrayList<ArrayList<String>> buyPropertyBot(ArrayList<ArrayList<String>> map, int counter){
+    public static void buyPropertyBot(ArrayList<ArrayList<String>> map, int counter, Bot bot){
         map.get(counter).set(1, "Bot");
         System.out.println("Bot have bought " + map.get(counter).get(0));
-        return map;
+        bot.properties.add(map.get(counter).get(0));
+        bot.budget -= 400;
     }
 
     public static boolean isAvailable(ArrayList<ArrayList<String>> map, int counter){
@@ -133,10 +52,38 @@ public class monopoly {
         else return false;
     }
 
+    public static boolean isBotOwn(ArrayList<ArrayList<String>> map, int counter){
+        if (map.get(counter).get(1).equals("Bot")) return true;
+        else return false;
+    }
+
+    public static boolean isMoneyPerson(Human human){
+        if (human.budget >= 0) return true;
+        else {
+            System.out.println("You lost!");
+            return false;
+        }
+    }
+
+    public static boolean isMoneyBot(Bot bot){
+        if (bot.budget >= 0) return true;
+        else {
+            System.out.println("Bot lost!");
+            System.out.println("Congrats, you won!");
+            return false;
+        }
+    }
+
+    public static boolean botBudgetOver400(Bot bot){
+        if (bot.budget >= 400) return true;
+        else return false;
+    }
 
     public static void play(Human person, Bot bot, ArrayList<ArrayList<String>> map){
         Scanner scanner = new Scanner(System.in);
-        while (person.budget > 0 && bot.budget > 0){
+        while (true){
+            if (!isMoneyBot(bot)) break;
+            if (!isMoneyPerson(person)) break;
 
             System.out.println("What would you like to do?(Enter the number): 1(Throw the dice), 2(Leave the game)");
 
@@ -144,8 +91,10 @@ public class monopoly {
 
             if (number1 == 2) break;
 
-            person.counter = person.counter + rollTheDice();
-            if (person.counter > 16){
+            int addToCounter = rollTheDice();
+            person.counter = person.counter + addToCounter;
+            System.out.println("You throw the dice and get " + addToCounter);
+            if (person.counter >= 16){
                 int remains = person.counter - 16;
                 person.counter = remains;
             }
@@ -166,34 +115,93 @@ public class monopoly {
             else if (isFreeToStay(map, person.counter))System.out.println("You got tired and decided to sleep for a little (Spoiler: Nothing bad happened)");
 
             else if (!isAvailable(map, person.counter)) {
-                System.out.println("Oh no, you stepped in NoMans land, you need to pay the fee to stay alive!");
+                System.out.println("Oh no, you stepped onto Bots land, you need to pay the fee to stay alive!");
                 System.out.println("You lost 50 credits");
                 person.budget -= 50;
+                bot.budget += 50;
             }
             else {
-                System.out.println("This land is empty! What would you like to do? 1(Buy the land), 2(Don't buy this land), 3(Check credits), 4(Check property)");
-
-                int number2 = scanner.nextInt();
-
-                if (number2 == 1) buyPropertyHuman(map, person.counter, person);
-                else if (number2 == 2) System.out.println("But... That was a good deal :(");
-                else if (number2 == 3) {
-                    System.out.println("Your budget is: " + person.budget);
-                } else if (number2 == 4) {
-                    if (person.properties == null) System.out.println("You have nothing at all! Haha!");
-                    else {
-                        System.out.println("You own those: ");
-                        for (String i : person.properties) {
-
-                            System.out.println(i);
+                while(true) {
+                    System.out.println(map.get(person.counter).get(0) + " is empty! What would you like to do? 1(Buy the land), 2(Don't buy this land), 3(Check credits), 4(Check property), 5(Check Bots property)");
+                    int number2 = scanner.nextInt();
+                    if (number2 == 1) {
+                        buyPropertyHuman(map, person.counter, person);
+                        break;
+                    }
+                    else if (number2 == 2){
+                        System.out.println("But... That was a good deal :(");
+                        break;
+                    }
+                    else if (number2 == 3) {
+                        System.out.println("Your budget is: " + person.budget);
+                    }
+                    else if (number2 == 4) {
+                        if (person.properties.isEmpty()) System.out.println("You have anything at all! Haha!");
+                        else {
+                            System.out.println("You own those: ");
+                            for (String i : person.properties) {
+                                System.out.println(i);
+                            }
+                        }
+                    }
+                    else if (number2 == 5) {
+                        if (bot.properties.isEmpty()) System.out.println("He don't have anything");
+                        else{
+                            System.out.println("Bot owns: ");
+                            for (String i : bot.properties) {
+                                System.out.println(i);
+                            }
                         }
                     }
                 }
             }
 
+            // Bots part of the code
+            System.out.println("Now it's the bots turn!");
+            int counter_add = rollTheDice();
+            System.out.println("He throws the dice and gets: " + counter_add);
+            bot.counter += counter_add;
+            if (bot.counter >= 16){
+                int remains = bot.counter - 16;
+                bot.counter = remains;
+            }
+            System.out.println("Bot is now on: " + map.get(bot.counter).get(0));
 
+            if (isBotOwn(map, bot.counter)){
+                System.out.println("Bot stepped onto his own land");
+            }
+            else if (isReward(map, bot.counter)){
+                System.out.println("Bot just won 200 credits in the lottery!");
+                bot.budget += 200;
+            }
+            else if (isPenalty(map, bot.counter)){
+                System.out.println("Bot got robbed! He lost 200 credits");
+                bot.budget -= 200;
+            }
+            else if (isFreeToStay(map, bot.counter)) System.out.println("Bot got tired and decided to sleep for a little (Spoiler: Nothing bad happened)");
+
+            else if (!isAvailable(map, bot.counter)) {
+                System.out.println("Oh no, bot stepped onto " + person.name + " land, he need to pay the fee to stay alive!");
+                System.out.println("Bot lost 50 credits");
+                bot.budget -= 50;
+                person.budget += 50;
+
+            }
+
+            while(true) {
+                System.out.println("Bot stepped on empty land!");
+                if (botBudgetOver400(bot)) {
+                    buyPropertyBot(map, bot.counter, bot);
+                    break;
+                }
+                else if (!botBudgetOver400(bot)){
+                    System.out.println("Bot wasn't in the mood, to buy the property!");
+                    break;
+                }
+            }
+
+            System.out.println("Now is your turn!");
         }
-
     }
 
     public static void main(String[] args) {

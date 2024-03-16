@@ -8,6 +8,7 @@ public class Bot {
     public Bot() {
         this.budget = 2000;
         this.counter = 0;
+        this.properties = new ArrayList<>();
     }
 
     public int getBudget() {

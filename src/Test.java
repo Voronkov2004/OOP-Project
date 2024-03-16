@@ -6,7 +6,7 @@ public class Test {
     public static void main(String[] args) {
         Human anton = new Human("Anton");
         Bot bot = new Bot();
-        ArrayList<ArrayList<String>> map = monopoly.createMap();
+        ArrayList<ArrayList<String>> map = Map.createMap();
         Scanner input = new Scanner(System.in);
         System.out.println("Hello there Traveller!");
         System.out.println("Would you like to play?: Y(yes)/N(no)");
